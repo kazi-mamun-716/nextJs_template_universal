@@ -34,6 +34,13 @@ export const ROUTES = {
   DASHBOARD_USER_DETAIL: "/dashboard/users",
   DASHBOARD_CONTENT: "/dashboard/content",
 
+  // ─── Blog ────────────────────────────────────────────────
+  BLOG: "/blog",
+  BLOG_POST: "/blog", // /blog/:slug — use buildRoute
+  DASHBOARD_BLOG: "/dashboard/blog",
+  DASHBOARD_BLOG_NEW: "/dashboard/blog/new",
+  DASHBOARD_BLOG_EDIT: "/dashboard/blog", // /dashboard/blog/:id/edit
+
   // ─── API ─────────────────────────────────────────────────
   API_AUTH: "/api/auth",
   API_AUTH_SESSION: "/api/auth/session",
@@ -53,10 +60,7 @@ export type Route = (typeof ROUTES)[keyof typeof ROUTES];
  * buildRoute("/posts/:postId/comments/:commentId", { postId: "5", commentId: "10" })
  * // "/posts/5/comments/10"
  */
-export function buildRoute(
-  pattern: string,
-  params: Record<string, string | number>,
-): string {
+export function buildRoute(pattern: string, params: Record<string, string | number>): string {
   let path = pattern;
   for (const [key, value] of Object.entries(params)) {
     path = path.replace(`:${key}`, String(value));

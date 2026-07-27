@@ -1,0 +1,2 @@
+# E2E tests use Playwright which has different conventions
+tests/e2e/

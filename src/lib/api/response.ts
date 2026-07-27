@@ -14,7 +14,13 @@
 
 import { NextResponse } from "next/server";
 import { HTTP_STATUS, type HttpStatusCode } from "@/constants/api-status";
-import type { ApiResponse, ApiSuccessResponse, ApiErrorResponse, PaginatedResponse, PaginationMeta } from "@/types/api";
+import type {
+  ApiResponse,
+  ApiSuccessResponse,
+  ApiErrorResponse,
+  PaginatedResponse,
+  PaginationMeta,
+} from "@/types/api";
 import { MESSAGES } from "@/constants/messages";
 
 // ─── Response Builders (for Server Actions) ───────
@@ -76,8 +82,11 @@ export function error(
 /**
  * Create a paginated success response.
  *
+ * Accepts the three essential pagination fields; hasNext, hasPrevious,
+ * and totalPages are computed automatically.
+ *
  * @param data - Array of items
- * @param meta - Pagination metadata
+ * @param params - Pagination source data (page, pageSize, total, optional totalPages)
  * @param message - Success message (optional)
  * @returns PaginatedResponse
  *
@@ -86,22 +95,23 @@ export function error(
  */
 export function paginated<T>(
   data: T[],
-  meta: Omit<PaginationMeta, "totalPages"> & { totalPages?: number },
+  params: { page: number; pageSize: number; total: number; totalPages?: number },
   message = "Data retrieved successfully",
 ): PaginatedResponse<T> {
-  const totalPages = meta.totalPages ?? Math.ceil(meta.total / meta.pageSize);
+  const { page, pageSize, total } = params;
+  const totalPages = params.totalPages ?? Math.ceil(total / pageSize);
 
   return {
     success: true,
     message,
     data,
     pagination: {
-      page: meta.page,
-      pageSize: meta.pageSize,
-      total: meta.total,
+      page,
+      pageSize,
+      total,
       totalPages,
-      hasNext: meta.page < totalPages,
-      hasPrevious: meta.page > 1,
+      hasNext: page < totalPages,
+      hasPrevious: page > 1,
     },
   };
 }
@@ -152,16 +162,16 @@ export function jsonError(
  * Send a JSON paginated response via NextResponse.
  *
  * @param data - Array of items
- * @param meta - Pagination metadata
+ * @param params - Pagination source data
  * @param status - HTTP status code (default: 200)
  * @returns NextResponse with JSON body
  */
 export function jsonPaginated<T>(
   data: T[],
-  meta: Omit<PaginationMeta, "totalPages"> & { totalPages?: number },
+  params: { page: number; pageSize: number; total: number; totalPages?: number },
   status: HttpStatusCode = HTTP_STATUS.OK,
 ): NextResponse {
-  return NextResponse.json(paginated(data, meta), { status });
+  return NextResponse.json(paginated(data, params), { status });
 }
 
 // ─── Common HTTP Response Helpers ─────────────────
@@ -208,7 +218,11 @@ export function conflict(message?: string) {
 
 /** 422 Unprocessable Entity */
 export function unprocessable(message?: string, errors?: Record<string, string[]>) {
-  return jsonError(message ?? MESSAGES.API.VALIDATION_ERROR, HTTP_STATUS.UNPROCESSABLE_ENTITY, errors);
+  return jsonError(
+    message ?? MESSAGES.API.VALIDATION_ERROR,
+    HTTP_STATUS.UNPROCESSABLE_ENTITY,
+    errors,
+  );
 }
 
 /** 429 Too Many Requests */

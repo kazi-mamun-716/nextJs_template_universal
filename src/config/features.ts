@@ -46,7 +46,7 @@ export const FEATURE_FLAGS = {
   billing: false,
 
   /** Enable the blog module */
-  blog: false,
+  blog: true,
 
   /** Enable notifications module */
   notifications: false,

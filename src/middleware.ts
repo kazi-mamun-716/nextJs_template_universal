@@ -11,41 +11,39 @@
 import { auth } from "@/lib/auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { buildSecurityHeaders, securityHeadersToRecord } from "@/features/security";
+import { ROUTES } from "@/constants/routes";
 
 // ─── Route Classification ─────────────────────────
 
 /** Routes that don't require authentication. */
-const PUBLIC_ROUTES = new Set([
-  "/",
-  "/about",
-  "/contact",
-  "/pricing",
-  "/faq",
-  "/terms",
-  "/privacy",
+const PUBLIC_ROUTES: ReadonlySet<string> = new Set([
+  ROUTES.HOME,
+  ROUTES.ABOUT,
+  ROUTES.CONTACT,
+  ROUTES.PRICING,
+  ROUTES.FAQ,
+  ROUTES.TERMS,
+  ROUTES.PRIVACY,
 ]);
 
 /** Auth pages — redirect authenticated users away from these. */
-const AUTH_ROUTES = new Set([
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
+const AUTH_ROUTES: ReadonlySet<string> = new Set([
+  ROUTES.LOGIN,
+  ROUTES.REGISTER,
+  ROUTES.FORGOT_PASSWORD,
+  ROUTES.RESET_PASSWORD,
+  ROUTES.VERIFY_EMAIL,
 ]);
 
 /** Routes that require admin role. */
-const ADMIN_ROUTES = [
-  "/dashboard/users",
-  "/dashboard/settings",
-];
+const ADMIN_ROUTES: readonly string[] = [ROUTES.DASHBOARD_USERS, ROUTES.DASHBOARD_SETTINGS];
 
 // ─── Helpers ────────────────────────────────────
 
 /**
  * Check if a pathname starts with any of the given prefixes.
  */
-function matchesPrefix(pathname: string, prefixes: string[]): boolean {
+function matchesPrefix(pathname: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
@@ -53,10 +51,12 @@ function matchesPrefix(pathname: string, prefixes: string[]): boolean {
  * Check if a pathname is a protected API route.
  */
 function isProtectedApiRoute(pathname: string): boolean {
-  return pathname.startsWith("/api") &&
+  return (
+    pathname.startsWith("/api") &&
     !pathname.startsWith("/api/auth") &&
     !pathname.startsWith("/api/health") &&
-    !pathname.startsWith("/api/webhooks");
+    !pathname.startsWith("/api/webhooks")
+  );
 }
 
 /**
@@ -87,7 +87,11 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // ── 1. Skip middleware for static files and Next.js internals ──
-  if (pathname.startsWith("/_next") || pathname.startsWith("/static") || pathname.startsWith("/favicon")) {
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.startsWith("/favicon")
+  ) {
     return NextResponse.next();
   }
 
@@ -133,10 +137,7 @@ export async function middleware(request: NextRequest) {
   // ── 7. Handle protected API routes ──
   if (isProtectedApiRoute(pathname) && !isAuthenticated) {
     return applySecurityHeaders(
-      NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 },
-      ),
+      NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 }),
     );
   }
 

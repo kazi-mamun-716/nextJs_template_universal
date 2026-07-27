@@ -2,7 +2,10 @@
 
 > A production-ready, feature-isolated Next.js boilerplate for building scalable web applications.
 
-This boilerplate follows **Feature-Based Architecture** with strict separation of concerns. Business logic lives inside isolated features. Shared infrastructure is minimal and purpose-built. Every major concern (auth, upload, email, SEO, dashboard, errors) has its own module with defined public API boundaries.
+This boilerplate follows **Feature-Based Architecture** with strict separation of concerns. Business logic lives inside isolated features. Shared infrastructure is minimal and purpose-built. Every major concern (auth, upload, email, SEO, dashboard, errors, logging, security) has its own module with defined public API boundaries.
+
+> **📚 Detailed documentation is available in the [`docs/`](docs/) folder.**
+> See [Architecture Decision Document](docs/ARCHITECTURE.md), [Folder Guide](docs/FOLDER-GUIDE.md), [Contributing Guide](docs/CONTRIBUTING.md), and [Deployment Guide](docs/DEPLOYMENT.md).
 
 ---
 
@@ -14,32 +17,33 @@ This boilerplate follows **Feature-Based Architecture** with strict separation o
 - [Architecture](#architecture)
 - [Features](#features)
 - [Configuration](#configuration)
+- [Security](#security)
 - [Development](#development)
 - [Docker](#docker)
 - [Scripts](#scripts)
-- [Contributing](#contributing)
+- [Detailed Documentation](docs/)
 
 ---
 
 ## Tech Stack
 
-| Category        | Technology                                      |
-| --------------- | ----------------------------------------------- |
-| **Framework**   | Next.js 15 (App Router)                         |
-| **Language**    | TypeScript 5                                    |
-| **Styling**     | Tailwind CSS 3 + shadcn/ui                      |
-| **Database**    | MongoDB + Mongoose                              |
-| **Auth**        | Auth.js v5 (Credentials, Google, GitHub)        |
-| **Validation**  | Zod + React Hook Form                           |
-| **Upload**      | Cloudinary                                      |
-| **Email**       | Resend + React Email templates                  |
-| **Icons**       | Lucide React                                    |
-| **Animations**  | Framer Motion (available)                       |
-| **Forms**       | React Hook Form + @hookform/resolvers           |
-| **Theme**       | next-themes (light / dark / system)             |
-| **Linting**     | ESLint 9 (flat config) + Prettier               |
-| **Hooks**       | Husky + lint-staged                             |
-| **Container**   | Docker + Docker Compose                         |
+| Category       | Technology                               |
+| -------------- | ---------------------------------------- |
+| **Framework**  | Next.js 15 (App Router)                  |
+| **Language**   | TypeScript 5                             |
+| **Styling**    | Tailwind CSS 3 + shadcn/ui               |
+| **Database**   | MongoDB + Mongoose                       |
+| **Auth**       | Auth.js v5 (Credentials, Google, GitHub) |
+| **Validation** | Zod + React Hook Form                    |
+| **Upload**     | Cloudinary                               |
+| **Email**      | Resend + React Email templates           |
+| **Icons**      | Lucide React                             |
+| **Animations** | Framer Motion (available)                |
+| **Forms**      | React Hook Form + @hookform/resolvers    |
+| **Theme**      | next-themes (light / dark / system)      |
+| **Linting**    | ESLint 9 (flat config) + Prettier        |
+| **Hooks**      | Husky + lint-staged                      |
+| **Container**  | Docker + Docker Compose                  |
 
 ---
 
@@ -151,14 +155,16 @@ src/
 │   └── storage-keys.ts           # localStorage keys
 │
 ├── features/                     # Isolated feature modules
-│   ├── auth/                     # Authentication
-│   ├── dashboard/                # Dashboard widgets & hooks
-│   ├── email/                    # Transactional emails
-│   ├── errors/                   # Error handling (boundaries, pages)
+│   ├── auth/                     # Authentication (login, register, password reset)
+│   ├── dashboard/                # Dashboard widgets, hooks, layout
+│   ├── email/                    # Transactional emails (React Email + Resend)
+│   ├── errors/                   # Error boundaries, pages, error logging
+│   ├── logging/                  # API logging, audit logging, dev logging
+│   ├── security/                 # HTTP headers, CSRF, rate limiting, sanitization
 │   ├── seo/                      # Metadata, sitemap, robots, JSON-LD
-│   ├── theme/                    # Theme toggle
+│   ├── theme/                    # Theme toggle (light/dark/system)
 │   ├── upload/                   # File uploads (Cloudinary)
-│   └── users/                    # User profile & settings
+│   └── users/                    # User profiles, settings, account management
 │
 ├── hooks/                        # Global shared hooks
 ├── lib/                          # Infrastructure layer
@@ -225,6 +231,7 @@ features/<feature>/
 ```
 
 **Rules:**
+
 - Features cannot import directly from other features' internal files — use the barrel export
 - Shared UI lives in `components/ui/`
 - Shared infrastructure (config, constants, utils, types) lives outside features
@@ -324,6 +331,25 @@ Route Handlers (app/api/*/route.ts)
 - App routes: `/sitemap.xml`, `/robots.txt`
 - Structured data injected in root layout
 
+### Logging (`features/logging`)
+
+- **API Logger** — request/response logging with timing, method, path, status code, user tracking
+- **Audit Logger** — structured audit trail for user actions (login, registration, profile changes, security events)
+- **Dev Logger** — development-only logging with timing, grouping, performance marks, and async function wrapping
+- Auto-generated log IDs (`AUD-XXXXX-XXXX`)
+- Severity-based filtering (info / warning / critical)
+- Labels for all audit actions and log categories
+
+### Security (`features/security`)
+
+- **Security Headers** — CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **CSRF Protection** — HMAC-based token generation & validation for custom API routes
+- **Rate Limiting** — in-memory sliding window with 7 presets (API, auth, login, password reset, email, upload, dashboard)
+- **Cookie Service** — secure cookie helpers with consistent security defaults
+- **Sanitizer** — XSS prevention, deep object sanitization, SQL injection pattern detection
+- **Security Validation** — origin trust checking, IP validation, pre-sanitize + Zod pipeline
+- Applied automatically via middleware on every response
+
 ### Theme (`features/theme`)
 
 - Light / Dark / System mode via `next-themes`
@@ -350,20 +376,20 @@ All configuration is centralized in `src/config/`. Values come from validated en
 
 ### Environment Variables
 
-| Variable                            | Required | Default                    | Description                     |
-| ----------------------------------- | -------- | -------------------------- | ------------------------------- |
-| `NEXT_PUBLIC_APP_URL`               | Yes      | `http://localhost:3000`    | Canonical application URL       |
-| `NEXT_PUBLIC_APP_NAME`              | Yes      | —                          | Application display name        |
-| `NEXT_PUBLIC_APP_DESCRIPTION`       | No       | —                          | Meta description                |
-| `MONGODB_URI`                       | Yes      | —                          | MongoDB connection string        |
-| `AUTH_SECRET`                       | Yes      | —                          | Auth.js secret (≥32 chars)      |
-| `AUTH_URL`                          | No       | `http://localhost:3000`    | Auth callback URL               |
-| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | No       | —                          | Cloudinary cloud name           |
-| `CLOUDINARY_API_KEY`                | No       | —                          | Cloudinary API key              |
-| `CLOUDINARY_API_SECRET`             | No       | —                          | Cloudinary API secret           |
-| `RESEND_API_KEY`                    | No       | —                          | Resend transactional email key  |
-| `RESEND_FROM_EMAIL`                 | No       | `noreply@example.com`      | Sender email address             |
-| `ENCRYPTION_KEY`                    | No       | —                          | Encryption key (≥32 chars)      |
+| Variable                            | Required | Default                 | Description                    |
+| ----------------------------------- | -------- | ----------------------- | ------------------------------ |
+| `NEXT_PUBLIC_APP_URL`               | Yes      | `http://localhost:3000` | Canonical application URL      |
+| `NEXT_PUBLIC_APP_NAME`              | Yes      | —                       | Application display name       |
+| `NEXT_PUBLIC_APP_DESCRIPTION`       | No       | —                       | Meta description               |
+| `MONGODB_URI`                       | Yes      | —                       | MongoDB connection string      |
+| `AUTH_SECRET`                       | Yes      | —                       | Auth.js secret (≥32 chars)     |
+| `AUTH_URL`                          | No       | `http://localhost:3000` | Auth callback URL              |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | No       | —                       | Cloudinary cloud name          |
+| `CLOUDINARY_API_KEY`                | No       | —                       | Cloudinary API key             |
+| `CLOUDINARY_API_SECRET`             | No       | —                       | Cloudinary API secret          |
+| `RESEND_API_KEY`                    | No       | —                       | Resend transactional email key |
+| `RESEND_FROM_EMAIL`                 | No       | `noreply@example.com`   | Sender email address           |
+| `ENCRYPTION_KEY`                    | No       | —                       | Encryption key (≥32 chars)     |
 
 ### Feature Flags (`src/config/features.ts`)
 
@@ -381,17 +407,17 @@ export const featureFlags = {
 
 ### Available Scripts
 
-| Command               | Description                     |
-| --------------------- | ------------------------------- |
-| `npm run dev`         | Start dev server (Turbopack)    |
-| `npm run build`       | Production build                |
-| `npm run start`       | Start production server         |
-| `npm run lint`        | Run ESLint                      |
-| `npm run lint:fix`    | Fix auto-fixable ESLint issues  |
-| `npm run format`      | Format all files with Prettier  |
-| `npm run typecheck`   | TypeScript type checking        |
-| `npm run check`       | Run all checks (type + lint + format) |
-| `npm run db:seed`     | Seed the database               |
+| Command             | Description                           |
+| ------------------- | ------------------------------------- |
+| `npm run dev`       | Start dev server (Turbopack)          |
+| `npm run build`     | Production build                      |
+| `npm run start`     | Start production server               |
+| `npm run lint`      | Run ESLint                            |
+| `npm run lint:fix`  | Fix auto-fixable ESLint issues        |
+| `npm run format`    | Format all files with Prettier        |
+| `npm run typecheck` | TypeScript type checking              |
+| `npm run check`     | Run all checks (type + lint + format) |
+| `npm run db:seed`   | Seed the database                     |
 
 ### Code Quality
 
@@ -450,15 +476,46 @@ npm run check  # Full quality check (typecheck + lint + format)
 
 ## Security
 
-- Input validation on every server action via Zod
+The boilerplate implements a comprehensive, layered security architecture.
+
+### Middleware Layer (Every Request)
+
+- **Content-Security-Policy** — restricts script/style/image sources
+- **Strict-Transport-Security** — enforces HTTPS (1 year, include subdomains)
+- **X-Content-Type-Options**: nosniff
+- **X-Frame-Options**: DENY
+- **Referrer-Policy**: strict-origin-when-cross-origin
+- **Permissions-Policy** — 24 features restricted by default (camera, mic, geolocation, etc.)
+
+### API Layer
+
+- **CSRF Protection** — HMAC-signed tokens for POST/PUT/PATCH/DELETE
+- **Rate Limiting** — sliding window, 7 presets, configurable via feature flag
+- **Input Validation** — every request validated with Zod before processing
+- **Consistent Error Responses** — never leak internal details in production
+
+### Application Layer
+
 - Passwords hashed with bcrypt (cost factor 12)
-- HTTP security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)
 - Authentication-required middleware for `/dashboard/*` routes
 - Role-based access control on protected routes
-- API errors never leak internal details in production
-- Secure cookies for session management
-- CORS-safe image sources configured in `next.config.ts`
+- Secure cookies (httpOnly, secure, sameSite)
+- SQL injection pattern detection
+- Input sanitization (XSS prevention, HTML stripping, entity escaping)
 - Environment variables validated at startup with fail-fast
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#11-security-architecture) for the complete security architecture.
+
+---
+
+## Detailed Documentation
+
+| Document                                       | Contents                                                                                 |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Architecture Decision Document — principles, data flow, module architecture, scalability |
+| [`docs/FOLDER-GUIDE.md`](docs/FOLDER-GUIDE.md) | Complete folder structure guide — every directory explained                              |
+| [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Contribution guidelines — code standards, PR process, conventions                        |
+| [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)     | Deployment guide — Docker, Vercel, VPS, environment variables                            |
 
 ---
 

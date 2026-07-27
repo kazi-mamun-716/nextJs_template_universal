@@ -29,6 +29,7 @@ const eslintConfig = [
       "next-env.d.ts",
       "**/*.config.*",
       "public/**",
+      "tests/e2e/**",
     ],
   },
 

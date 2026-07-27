@@ -37,6 +37,10 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+# Playwright
+playwright-report/
+test-results/
+playwright/.cache/
 
 # TypeScript
 *.tsbuildinfo

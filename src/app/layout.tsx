@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/providers";
-import { appConfig } from "@/config/app";
+import { JsonLd } from "@/features/seo";
+import { metadataGenerator } from "@/features/seo/services/metadata-generator";
 import "@/styles/globals.css";
 
 const inter = Inter({
@@ -10,31 +11,7 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: appConfig.name,
-    template: `%s | ${appConfig.name}`,
-  },
-  description: appConfig.description,
-  metadataBase: new URL(appConfig.url),
-  openGraph: {
-    title: appConfig.name,
-    description: appConfig.description,
-    url: appConfig.url,
-    siteName: appConfig.name,
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: appConfig.name,
-    description: appConfig.description,
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+export const metadata: Metadata = metadataGenerator.default();
 
 export default function RootLayout({
   children,
@@ -43,6 +20,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <JsonLd
+          data={[
+            JsonLd.organization(),
+            JsonLd.website(),
+          ]}
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>

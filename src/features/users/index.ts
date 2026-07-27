@@ -7,10 +7,16 @@ export { UserCard } from "./components/user-card";
 export { UserList } from "./components/user-list";
 export { UserProfile } from "./components/user-profile";
 export { UserAvatar } from "./components/user-avatar";
+export { ChangePasswordForm } from "./components/change-password-form";
+export { DeleteAccountDialog } from "./components/delete-account-dialog";
+export { UserSettingsForm } from "./components/user-settings-form";
 
 // Server Actions
 export { updateProfile } from "./actions/update-profile";
 export { getUsers } from "./actions/get-users";
+export { changePassword } from "./actions/change-password";
+export { deleteAccount } from "./actions/delete-account";
+export { updateSettings } from "./actions/update-settings";
 
 // Types
 export type { IUser, IUserProfile } from "./types";

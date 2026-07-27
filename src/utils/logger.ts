@@ -29,6 +29,7 @@ class Logger {
       const prefix = `[${entry.timestamp}] [${level.toUpperCase()}]`;
       const styledMessage = `${prefix} ${message}`;
 
+      /* eslint-disable no-console */
       switch (level) {
         case "debug":
           console.debug(styledMessage, context ?? "");
@@ -43,8 +44,10 @@ class Logger {
           console.error(styledMessage, context ?? "", error ?? "");
           break;
       }
+      /* eslint-enable no-console */
     } else {
       // In production, output JSON for log aggregation tools
+      // eslint-disable-next-line no-console
       console.log(JSON.stringify(entry));
     }
   }

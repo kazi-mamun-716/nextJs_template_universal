@@ -38,7 +38,6 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "5mb",
     },
-    typedRoutes: true,
   },
 
   /* Headers & Security */

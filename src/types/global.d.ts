@@ -1,5 +1,3 @@
-/* eslint-disable no-var */
-
 /**
  * Global type augmentations for the application.
  */

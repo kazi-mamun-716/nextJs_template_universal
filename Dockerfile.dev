@@ -1,0 +1,15 @@
+# ─── Development Stage ────────────────────────────────────────
+FROM node:20-alpine AS dev
+
+WORKDIR /app
+
+# Install dependencies first (cached layer)
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source code (volume mount will override in dev)
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

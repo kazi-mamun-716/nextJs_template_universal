@@ -1,0 +1,44 @@
+services:
+  # ─── Application ────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: universal-boilerplate-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongo:27017/universal_boilerplate
+      - AUTH_SECRET=${AUTH_SECRET:-dev-secret-at-least-32-characters-long}
+      - AUTH_URL=http://localhost:3000
+    env_file:
+      - .env.local
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─── MongoDB ─────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: universal-boilerplate-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - .docker/data/mongo:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: universal_boilerplate
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

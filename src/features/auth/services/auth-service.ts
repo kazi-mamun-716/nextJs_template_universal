@@ -20,7 +20,9 @@ import { authFeatureConfig } from "@/features/auth/config";
 import { auth } from "@/lib/auth";
 import { MESSAGES } from "@/constants/messages";
 import { DuplicateKeyError } from "@/lib/db/errors";
+import { env } from "@/config/env";
 import type { ApiResponse, IUser } from "@/types";
+import { emailService } from "@/features/email/services/email-service";
 
 // ─── Initialize Repository ─────────────────────────
 
@@ -126,7 +128,18 @@ export const authService = {
           type: "verify_email" as VerificationTokenType,
           expiresAt: getTokenExpiry(1440), // 24 hours
         });
-        // TODO: Send verification email via Resend
+        // Send verification email
+        if (emailService.isEnabled) {
+          const verifyUrl = `${env.NEXT_PUBLIC_APP_URL}/verify-email?token=${token}`;
+          emailService.sendVerificationEmail({
+            userName: data.name,
+            userEmail: user.email,
+            verifyUrl,
+            expiresInMinutes: 1440,
+          }).catch((err) => {
+            console.error("[AuthService] Failed to send verification email:", err);
+          });
+        }
       }
 
       return {
@@ -177,7 +190,18 @@ export const authService = {
         expiresAt: getTokenExpiry(),
       });
 
-      // TODO: Send reset email via Resend
+      // Send password reset email
+      if (emailService.isEnabled) {
+        const resetUrl = `${env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+        emailService.sendResetPasswordEmail({
+          userName: user.name,
+          userEmail: user.email,
+          resetUrl,
+          expiresInMinutes: authFeatureConfig.resetTokenExpiryMinutes,
+        }).catch((err) => {
+          console.error("[AuthService] Failed to send reset email:", err);
+        });
+      }
 
       return { success: true, message: MESSAGES.SUCCESS.EMAIL_SENT };
     } catch {

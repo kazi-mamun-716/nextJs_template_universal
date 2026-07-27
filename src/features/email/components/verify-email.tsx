@@ -1,47 +1,47 @@
 /**
- * ResetPasswordEmail — sent when a user requests a password reset.
+ * VerifyEmail — sent after registration to confirm the user's email address.
  *
  * @example
- * <ResetPasswordEmail
+ * <VerifyEmail
  *   userName="John"
  *   userEmail="john@example.com"
- *   resetUrl="https://app.example.com/reset-password?token=abc123"
- *   expiresInMinutes={60}
+ *   verifyUrl="https://app.example.com/verify-email?token=abc123"
+ *   expiresInMinutes={1440}
  * />
  */
 
 import React from "react";
 import { EMAIL_BRANDING, EMAIL_EXPIRY_TEXT } from "../constants";
-import type { ResetPasswordEmailProps } from "../types";
+import type { VerifyEmailProps } from "../types";
 
-export function ResetPasswordEmail({
+export function VerifyEmail({
   userName,
   userEmail,
-  resetUrl,
-  expiresInMinutes = 60,
-}: ResetPasswordEmailProps) {
+  verifyUrl,
+  expiresInMinutes = 1440,
+}: VerifyEmailProps) {
+  const expiresDisplay =
+    expiresInMinutes >= 1440
+      ? `${expiresInMinutes / 1440} day(s)`
+      : `${expiresInMinutes} minute(s)`;
+
   return (
     <div>
-      <h1 style={headingStyle}>Reset your password</h1>
+      <h1 style={headingStyle}>Verify your email address</h1>
 
       <p style={paragraphStyle}>Hi {userName},</p>
 
       <p style={paragraphStyle}>
-        We received a request to reset the password for your{" "}
-        {EMAIL_BRANDING.APP_NAME} account associated with{" "}
-        <strong>{userEmail}</strong>.
-      </p>
-
-      <p style={paragraphStyle}>
-        Click the button below to set a new password:
+        Thanks for creating an account with {EMAIL_BRANDING.APP_NAME}! Please
+        verify your email address by clicking the button below.
       </p>
 
       <table width="100%" cellPadding="0" cellSpacing="0" style={ctaTableStyle}>
         <tbody>
           <tr>
             <td align="center">
-              <a href={resetUrl} style={buttonStyle} target="_blank">
-                Reset Password
+              <a href={verifyUrl} style={buttonStyle} target="_blank">
+                Verify Email
               </a>
             </td>
           </tr>
@@ -58,8 +58,8 @@ export function ResetPasswordEmail({
           <tr>
             <td style={warningCellStyle}>
               <p style={warningTextStyle}>
-                ⚠️ {EMAIL_EXPIRY_TEXT.RESET_LINK}{" "}
-                <strong>{expiresInMinutes} minutes</strong>.
+                ⏳ {EMAIL_EXPIRY_TEXT.VERIFY_LINK}{" "}
+                <strong>{expiresDisplay}</strong>.
               </p>
             </td>
           </tr>
@@ -71,13 +71,13 @@ export function ResetPasswordEmail({
         browser:
       </p>
 
-      <p style={urlStyle}>{resetUrl}</p>
+      <p style={urlStyle}>{verifyUrl}</p>
 
       <hr style={dividerStyle} />
 
-      <p style={ignoreTextStyle}>
-        If you didn&rsquo;t request a password reset, you can safely ignore
-        this email. Your password will not be changed.
+      <p style={helpTextStyle}>
+        If you didn&rsquo;t create an account, you can safely ignore this
+        email. No further action is needed.
       </p>
     </div>
   );
@@ -124,13 +124,13 @@ const warningBoxStyle: React.CSSProperties = {
 };
 
 const warningCellStyle: React.CSSProperties = {
-  backgroundColor: "#fef3c7",
+  backgroundColor: "#dbeafe",
   borderRadius: "6px",
   padding: "12px 16px",
 };
 
 const warningTextStyle: React.CSSProperties = {
-  color: "#92400e",
+  color: "#1e40af",
   fontSize: "14px",
   lineHeight: "20px",
   margin: 0,
@@ -150,7 +150,7 @@ const dividerStyle: React.CSSProperties = {
   margin: "24px 0",
 };
 
-const ignoreTextStyle: React.CSSProperties = {
+const helpTextStyle: React.CSSProperties = {
   color: "#a1a1aa",
   fontSize: "14px",
   lineHeight: "20px",

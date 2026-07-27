@@ -14,7 +14,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         // This is a placeholder — will be implemented in the auth feature
         if (!credentials?.email || !credentials?.password) {
-          throw new Error(MESSAGES.VALIDATION_ERROR);
+          throw new Error(MESSAGES.ERROR.VALIDATION_ERROR);
         }
 
         return null;

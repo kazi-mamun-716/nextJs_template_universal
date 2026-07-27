@@ -8,12 +8,12 @@ import { MESSAGES } from "@/constants/messages";
 export const registerSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters").max(100),
-    email: z.string().min(1, MESSAGES.REQUIRED_FIELD).regex(REGEX.EMAIL, MESSAGES.INVALID_EMAIL),
-    password: z.string().min(8, MESSAGES.PASSWORD_MIN_LENGTH),
-    confirmPassword: z.string().min(1, MESSAGES.REQUIRED_FIELD),
+    email: z.string().min(1, MESSAGES.VALIDATION.REQUIRED).regex(REGEX.EMAIL, MESSAGES.VALIDATION.INVALID_EMAIL),
+    password: z.string().min(8, MESSAGES.VALIDATION.PASSWORD_MIN_LENGTH),
+    confirmPassword: z.string().min(1, MESSAGES.VALIDATION.REQUIRED),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: MESSAGES.PASSWORD_MISMATCH,
+    message: MESSAGES.VALIDATION.PASSWORD_MISMATCH,
     path: ["confirmPassword"],
   });
 

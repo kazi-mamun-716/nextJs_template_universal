@@ -6,7 +6,7 @@ import { MESSAGES } from "@/constants/messages";
  * Forgot password form validation schema.
  */
 export const forgotPasswordSchema = z.object({
-  email: z.string().min(1, MESSAGES.REQUIRED_FIELD).regex(REGEX.EMAIL, MESSAGES.INVALID_EMAIL),
+  email: z.string().min(1, MESSAGES.VALIDATION.REQUIRED).regex(REGEX.EMAIL, MESSAGES.VALIDATION.INVALID_EMAIL),
 });
 
 /**
@@ -15,10 +15,10 @@ export const forgotPasswordSchema = z.object({
 export const resetPasswordSchema = z
   .object({
     token: z.string().min(1),
-    password: z.string().min(8, MESSAGES.PASSWORD_MIN_LENGTH),
-    confirmPassword: z.string().min(1, MESSAGES.REQUIRED_FIELD),
+    password: z.string().min(8, MESSAGES.VALIDATION.PASSWORD_MIN_LENGTH),
+    confirmPassword: z.string().min(1, MESSAGES.VALIDATION.REQUIRED),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: MESSAGES.PASSWORD_MISMATCH,
+    message: MESSAGES.VALIDATION.PASSWORD_MISMATCH,
     path: ["confirmPassword"],
   });

@@ -1,34 +1,71 @@
 /**
- * User roles and permission constants.
+ * User role constants.
+ * Uses `as const` object instead of TypeScript enum for better tree-shaking
+ * and simpler type inference.
+ *
+ * @example
+ * import { ROLES, type UserRole, isAdmin } from "@/constants/roles";
+ *
+ * if (user.role === ROLES.ADMIN) { ... }
+ * if (isAdmin(user.role)) { ... }
  */
-export enum UserRole {
-  ADMIN = "admin",
-  USER = "user",
-  MODERATOR = "moderator",
+
+export const ROLES = {
+  ADMIN: "admin",
+  USER: "user",
+  MODERATOR: "moderator",
+} as const;
+
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+/**
+ * Checks if a role is the admin role.
+ */
+export function isAdmin(role: UserRole): boolean {
+  return role === ROLES.ADMIN;
 }
 
 /**
- * Permission matrix defining which roles can perform which actions.
+ * Checks if a role is the moderator role.
  */
-export const PERMISSIONS = {
-  // Users
-  MANAGE_USERS: [UserRole.ADMIN],
-  VIEW_USERS: [UserRole.ADMIN, UserRole.MODERATOR],
-  DELETE_USERS: [UserRole.ADMIN],
+export function isModerator(role: UserRole): boolean {
+  return role === ROLES.MODERATOR;
+}
 
-  // Content
-  CREATE_CONTENT: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.USER],
-  EDIT_CONTENT: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.USER],
-  DELETE_CONTENT: [UserRole.ADMIN, UserRole.MODERATOR],
-  PUBLISH_CONTENT: [UserRole.ADMIN, UserRole.MODERATOR],
+/**
+ * Checks if a role has administrative privileges (admin or moderator).
+ */
+export function isStaff(role: UserRole): boolean {
+  return role === ROLES.ADMIN || role === ROLES.MODERATOR;
+}
 
-  // Settings
-  MANAGE_SETTINGS: [UserRole.ADMIN],
-  VIEW_SETTINGS: [UserRole.ADMIN, UserRole.MODERATOR],
+/**
+ * Returns the display name for a role.
+ */
+export function getRoleDisplayName(role: UserRole): string {
+  const displayNames: Record<UserRole, string> = {
+    [ROLES.ADMIN]: "Administrator",
+    [ROLES.USER]: "User",
+    [ROLES.MODERATOR]: "Moderator",
+  };
+  return displayNames[role] ?? role;
+}
 
-  // System
-  MANAGE_SYSTEM: [UserRole.ADMIN],
-  VIEW_ANALYTICS: [UserRole.ADMIN, UserRole.MODERATOR],
-} as const;
+/**
+ * Returns the priority level of a role (higher = more privileges).
+ */
+export function getRolePriority(role: UserRole): number {
+  const priorities: Record<UserRole, number> = {
+    [ROLES.ADMIN]: 100,
+    [ROLES.MODERATOR]: 50,
+    [ROLES.USER]: 10,
+  };
+  return priorities[role] ?? 0;
+}
 
-export type Permission = keyof typeof PERMISSIONS;
+/**
+ * Checks if a role has sufficient priority (hierarchy check).
+ */
+export function hasMinPriority(role: UserRole, minRole: UserRole): boolean {
+  return getRolePriority(role) >= getRolePriority(minRole);
+}

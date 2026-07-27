@@ -1,28 +1,27 @@
 "use server";
 
-import { resetPasswordSchema } from "@/features/auth/schemas/password-schema";
+import { forgotPasswordSchema } from "@/features/auth/schemas/password-schema";
 import { authService } from "@/features/auth/services/auth-service";
 import { MESSAGES } from "@/constants/messages";
 import type { ApiResponse } from "@/types/api";
 
 /**
- * Resets a user's password using a valid reset token.
+ * Sends a password reset email to the user.
+ * Always returns success to prevent email enumeration.
  *
  * @param _prevState - Previous form state (for useActionState)
- * @param formData - Form data with token, password, and confirmPassword
+ * @param formData - Form data with email field
  * @returns API response
  */
-export async function resetPassword(
+export async function forgotPassword(
   _prevState: ApiResponse | null,
   formData: FormData,
 ): Promise<ApiResponse> {
   const rawData = {
-    token: formData.get("token") as string,
-    password: formData.get("password") as string,
-    confirmPassword: formData.get("confirmPassword") as string,
+    email: formData.get("email") as string,
   };
 
-  const validation = resetPasswordSchema.safeParse(rawData);
+  const validation = forgotPasswordSchema.safeParse(rawData);
   if (!validation.success) {
     const fieldErrors = validation.error.flatten().fieldErrors;
     return {
@@ -32,5 +31,5 @@ export async function resetPassword(
     };
   }
 
-  return authService.resetPassword(validation.data.token, validation.data.password);
+  return authService.forgotPassword(validation.data.email);
 }

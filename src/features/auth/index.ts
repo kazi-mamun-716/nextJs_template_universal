@@ -9,6 +9,8 @@
 export { LoginForm } from "./components/login-form";
 export { RegisterForm } from "./components/register-form";
 export { ForgotPasswordForm } from "./components/forgot-password-form";
+export { ResetPasswordForm } from "./components/reset-password-form";
+export { VerifyEmailForm } from "./components/verify-email-form";
 export { OAuthButtons } from "./components/oauth-buttons";
 export { AuthGuard } from "./components/auth-guard";
 
@@ -16,7 +18,9 @@ export { AuthGuard } from "./components/auth-guard";
 export { login } from "./actions/login";
 export { register } from "./actions/register";
 export { logout } from "./actions/logout";
+export { forgotPassword } from "./actions/forgot-password";
 export { resetPassword } from "./actions/reset-password";
+export { verifyEmail } from "./actions/verify-email";
 
 // Types
 export type { LoginFormValues, RegisterFormValues, IAuthResponse, IUserSession } from "./types";
@@ -24,7 +28,6 @@ export type { LoginFormValues, RegisterFormValues, IAuthResponse, IUserSession }
 // Hooks
 export { useAuth } from "./hooks/use-auth";
 export { useSession } from "./hooks/use-session";
-export { useLoginForm } from "./hooks/use-login-form";
 
 // Constants & Routes
 export { AUTH_MESSAGES, AUTH_ERRORS } from "./constants";

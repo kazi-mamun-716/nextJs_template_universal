@@ -40,4 +40,7 @@ export type { CorsConfig } from "./cors";
 export { featureFlags } from "./features";
 export type { FeatureFlags, FeatureFlag } from "./features";
 
+export { securityConfig } from "./security";
+export type { SecurityConfig } from "./security";
+
 export { validateConfig } from "./validator";

@@ -1,6 +1,7 @@
 /**
- * Next.js middleware for authentication and authorization.
+ * Next.js middleware for authentication, authorization, and security headers.
  *
+ * - Applies security headers to all responses.
  * - Redirects unauthenticated users to the login page for protected routes.
  * - Redirects authenticated users away from auth pages (login, register, etc.).
  * - Enforces role-based access control for dashboard routes.
@@ -9,6 +10,7 @@
 
 import { auth } from "@/lib/auth";
 import { NextResponse, type NextRequest } from "next/server";
+import { buildSecurityHeaders, securityHeadersToRecord } from "@/features/security";
 
 // ─── Route Classification ─────────────────────────
 
@@ -57,6 +59,28 @@ function isProtectedApiRoute(pathname: string): boolean {
     !pathname.startsWith("/api/webhooks");
 }
 
+/**
+ * Build the security headers record once.
+ * Using a lazy-loaded singleton pattern to avoid rebuilding on every request.
+ */
+let cachedSecurityHeaders: Record<string, string> | null = null;
+function getSecurityHeaders(): Record<string, string> {
+  if (!cachedSecurityHeaders) {
+    cachedSecurityHeaders = securityHeadersToRecord(buildSecurityHeaders());
+  }
+  return cachedSecurityHeaders;
+}
+
+/**
+ * Apply security headers to a NextResponse.
+ */
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  Object.entries(getSecurityHeaders()).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+  return response;
+}
+
 // ─── Middleware ─────────────────────────────────
 
 export async function middleware(request: NextRequest) {
@@ -80,14 +104,14 @@ export async function middleware(request: NextRequest) {
   // ── 4. Handle auth routes (login, register, etc.) ──
   if (AUTH_ROUTES.has(pathname)) {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
     }
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next());
   }
 
   // ── 5. Handle public routes ──
   if (PUBLIC_ROUTES.has(pathname)) {
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next());
   }
 
   // ── 6. Handle dashboard routes (require authentication) ──
@@ -95,26 +119,28 @@ export async function middleware(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      return applySecurityHeaders(NextResponse.redirect(loginUrl));
     }
 
     // Check admin-only routes
     if (matchesPrefix(pathname, ADMIN_ROUTES) && userRole !== "admin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return applySecurityHeaders(NextResponse.redirect(new URL("/dashboard", request.url)));
     }
 
-    return NextResponse.next();
+    return applySecurityHeaders(NextResponse.next());
   }
 
   // ── 7. Handle protected API routes ──
   if (isProtectedApiRoute(pathname) && !isAuthenticated) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized" },
-      { status: 401 },
+    return applySecurityHeaders(
+      NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 },
+      ),
     );
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(NextResponse.next());
 }
 
 /**
